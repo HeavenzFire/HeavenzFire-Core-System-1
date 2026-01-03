@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { AppView, MoodEntry, VerificationStatus } from '../types';
 import { SYSTEM_MANIFESTO, DEPLOYMENT_ROADMAP } from '../constants';
-import { Zap, Heart, ShieldAlert, Cpu, Database, Terminal, ShieldCheck, XCircle, Activity, ChevronRight, Target, Clock } from 'lucide-react';
+import { Zap, Heart, ShieldAlert, Cpu, Database, Terminal, ShieldCheck, XCircle, Activity, ChevronRight, Target, Globe, Server, Network } from 'lucide-react';
 
 interface Props {
   onViewChange: (view: AppView) => void;
@@ -18,16 +18,26 @@ const DashboardView: React.FC<Props> = ({ onViewChange, moodHistory, verificatio
     return acc;
   }, 0) / (moodHistory.filter(m => m.scoreAfter !== undefined).length || 1);
 
-  const bioLinkSessions = moodHistory.filter(m => m.bioSnapshot).length;
   const lockedArtifacts = moodHistory.filter(m => m.artifact).length;
+
+  // Simulated Mesh Density Data
+  const meshData = useMemo(() => {
+    return [
+      { region: 'North America', density: 0.82, nodes: 421 },
+      { region: 'Europe', density: 0.65, nodes: 312 },
+      { region: 'Asia', density: 0.44, nodes: 189 },
+      { region: 'South America', density: 0.28, nodes: 94 },
+      { region: 'Africa', density: 0.15, nodes: 56 },
+    ];
+  }, []);
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <header className="space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[10px] font-black mono uppercase tracking-widest">
-          <Zap size={12} className="fill-current" /> Live Node: HeavenzFire Sovereign
+          <Zap size={12} className="fill-current" /> Mesh Active: HeavenzFire Sovereign Node
         </div>
-        <h2 className="text-6xl font-black tracking-tighter uppercase text-white">Tactical Relief</h2>
+        <h2 className="text-6xl font-black tracking-tighter uppercase text-white leading-none">Global Status</h2>
         <p className="text-zinc-500 max-w-2xl whitespace-pre-line leading-relaxed mono text-xs opacity-80 italic">
           "{SYSTEM_MANIFESTO}"
         </p>
@@ -41,49 +51,64 @@ const DashboardView: React.FC<Props> = ({ onViewChange, moodHistory, verificatio
           unit="Pts/S"
         />
         <StatCard 
-          icon={<Activity className="text-emerald-500" />} 
-          title="Artifacts Locked" 
-          value={lockedArtifacts.toString()} 
-          unit="Mastered"
+          icon={<Network className="text-cyan-500" />} 
+          title="Mesh Peers" 
+          value="1,072" 
+          unit="Nodes"
         />
         <StatCard 
-          icon={<Cpu className="text-cyan-500" />} 
+          icon={<Cpu className="text-emerald-500" />} 
           title="Integrity Status" 
           value={verification?.passed ? 'VERIFIED' : 'PENDING'} 
           unit={verification?.passed ? 'Nominal' : 'Run Req.'}
           highlight={verification?.passed ? 'emerald' : 'rose'}
         />
         <StatCard 
-          icon={<ShieldAlert className="text-amber-500" />} 
-          title="Node Security" 
-          value="LOCAL" 
-          unit="Air-Gapped"
+          icon={<Database className="text-amber-500" />} 
+          title="Local Cache" 
+          value={`${moodHistory.length}`} 
+          unit="Bundles"
         />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <section className="bg-zinc-950 border border-zinc-900 p-8 rounded-[2.5rem] space-y-6 shadow-2xl relative overflow-hidden group">
-            <div className="absolute -top-12 -right-12 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl group-hover:bg-amber-500/10 transition-all duration-1000"></div>
-            <div className="flex justify-between items-start">
-              <div className="space-y-1">
-                <h3 className="text-2xl font-black flex items-center gap-3 uppercase tracking-tighter text-white">
-                  Active Pipeline
-                </h3>
-                <p className="text-zinc-500 text-[10px] mono uppercase tracking-widest">System 1 Protocol</p>
-              </div>
-              <Zap className="text-amber-500/20 group-hover:text-amber-500/50 transition-colors" size={40} />
+          <section className="bg-zinc-950 border border-zinc-900 p-10 rounded-[3rem] shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-8 opacity-5">
+              <Globe size={180} className="text-amber-500" />
             </div>
-            <p className="text-zinc-400 text-sm leading-relaxed mono italic">
-              "Acute distress episodes require structured auditory grounding. 
-              Initiate Wonder Engine v3.0 to deploy deterministic harmonics with integrated bio-link telemetry."
-            </p>
+            <div className="flex justify-between items-start mb-10">
+              <div className="space-y-2">
+                <h3 className="text-3xl font-black uppercase tracking-tighter text-white">Global Mesh Density</h3>
+                <p className="text-zinc-500 text-[10px] mono uppercase tracking-widest font-bold">Autonomic Propagation Telemetry</p>
+              </div>
+              <div className="px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-xl">
+                 <span className="text-[10px] mono text-emerald-500 font-black animate-pulse uppercase">Syncing_Protocol_v1.2</span>
+              </div>
+            </div>
+
+            <div className="space-y-6 relative z-10">
+              {meshData.map((region) => (
+                <div key={region.region} className="space-y-2">
+                  <div className="flex justify-between text-[10px] mono font-black uppercase tracking-widest">
+                    <span className="text-zinc-400">{region.region}</span>
+                    <span className="text-zinc-500">{region.nodes} Nodes</span>
+                  </div>
+                  <div className="h-1.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800/50">
+                    <div 
+                      className="h-full bg-gradient-to-r from-amber-900 via-amber-500 to-amber-200 transition-all duration-1000 ease-out"
+                      style={{ width: `${region.density * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
             <button 
-              onClick={() => onViewChange(AppView.LAB)}
-              className="w-full py-5 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-xl shadow-amber-500/10 uppercase tracking-tighter text-sm"
+              onClick={() => onViewChange(AppView.REPLICATION)}
+              className="mt-12 w-full py-5 bg-white text-black font-black rounded-2xl flex items-center justify-center gap-3 hover:bg-zinc-100 transition-all active:scale-[0.98] shadow-2xl uppercase text-xs tracking-tighter"
             >
-              Launch Wonder Engine
-              <ChevronRight size={18} />
+              <Server size={18} /> Enter Replication Portal
             </button>
           </section>
 
@@ -110,7 +135,7 @@ const DashboardView: React.FC<Props> = ({ onViewChange, moodHistory, verificatio
         </div>
 
         <aside className="space-y-8">
-          <section className="bg-zinc-950 border border-zinc-900 p-8 rounded-[2.5rem] space-y-6 shadow-2xl">
+          <section className="bg-zinc-950 border border-zinc-900 p-8 rounded-[2.5rem] shadow-2xl space-y-6">
             <h3 className="text-xs font-black mono uppercase tracking-widest text-zinc-500 flex items-center gap-3">
               <Terminal size={16} /> Integrity Check
             </h3>
@@ -147,15 +172,15 @@ const DashboardView: React.FC<Props> = ({ onViewChange, moodHistory, verificatio
             <div className="space-y-4">
                <div>
                   <div className="flex justify-between text-[9px] mono text-zinc-500 uppercase font-bold mb-1">
-                     <span>Node Capacity</span>
-                     <span>0.02%</span>
+                     <span>Cache Depth</span>
+                     <span>{((moodHistory.length / 5000) * 100).toFixed(2)}%</span>
                   </div>
                   <div className="h-1 bg-zinc-900 rounded-full overflow-hidden">
-                     <div className="h-full bg-cyan-500 w-[2%]"></div>
+                     <div className="h-full bg-cyan-500" style={{ width: `${(moodHistory.length / 5000) * 100}%` }}></div>
                   </div>
                </div>
-               <p className="text-[9px] mono text-zinc-700 uppercase leading-relaxed italic">
-                  Local persistence only. Data remains within your sovereign hardware boundary. No cloud handshakes detected.
+               <p className="text-[9px] mono text-zinc-700 uppercase leading-relaxed italic font-bold">
+                  Sovereign Mesh Encryption active. All bundles are locked to hardware node identity. External sync requires manual P2P handshake.
                </p>
             </div>
           </section>

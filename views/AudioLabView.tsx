@@ -25,7 +25,8 @@ import {
   Fingerprint,
   Archive,
   Globe,
-  Waves
+  Waves,
+  History
 } from 'lucide-react';
 import { BASELINE_TRACKS } from '../constants';
 import { AudioTrack, MoodEntry, DSPConfig, BioMetrics, WonderArtifact, SignalMetrics, SignalLocale, GridFrequency } from '../types';
@@ -71,7 +72,13 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
     compressionRatio: 4,
     reverbWet: 0.3,
     binauralDepth: 0.8,
-    gridSync: '60Hz'
+    gridSync: '60Hz',
+    microModulation: {
+      lfoFreq: 0.15,
+      depth: 0.005,
+      phaseShift: 0,
+      deterministicSeed: 42
+    }
   });
 
   useEffect(() => {
@@ -79,7 +86,9 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
     if (isPlaying) {
       timer = setInterval(() => {
         const time = Date.now() / 1000;
-        const basePulse = Math.sin(time * (bioMetrics.bpm / 60 || 1.2) * 2 * Math.PI);
+        // Deterministic Micro-Modulation Logic embedded in simulated pulse
+        const lfo = 1 + (dsp.microModulation?.depth || 0) * Math.sin(2 * Math.PI * (dsp.microModulation?.lfoFreq || 0.15) * time);
+        const basePulse = Math.sin(time * (bioMetrics.bpm / 60 || 1.2) * 2 * Math.PI) * lfo;
         const noise = (Math.random() - 0.5) * 0.2;
         const value = basePulse + noise;
         setCurrentPulseValue(value);
@@ -110,7 +119,7 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
       }, 1000 / 60);
     }
     return () => clearInterval(timer);
-  }, [isPlaying, bioSyncEnabled, bioMetrics.bpm]);
+  }, [isPlaying, bioSyncEnabled, bioMetrics.bpm, dsp.microModulation]);
 
   useEffect(() => {
     let interval: any;
@@ -187,10 +196,11 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
     setSessionPhase('MASTERING');
     setIsMastering(true);
     setMasteringLogs([
-      '[SYSTEM] INITIALIZING MASTERING ENGINE v3.1_OFFLINE', 
+      '[SYSTEM] INITIALIZING MASTERING ENGINE v3.1_GLOBAL', 
       `[SYSTEM] GRID_SYNC_LOCK: ${dsp.gridSync}`,
       '[SYSTEM] LOADING SESSION TELEMETRY...', 
       '[SYSTEM] BUFFERING SIGNAL_ARRAY (N=4000)',
+      '[SYSTEM] ANALYZING AUTONOMIC DRIFT...'
     ]);
     
     setTimeout(() => {
@@ -198,18 +208,23 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
         ...prev, 
         '[SYSTEM] APPLYING STFT DENOISE...', 
         '[SYSTEM] CALCULATING RMS_LADDER...', 
+        '[SYSTEM] APPLYING DETERMINISTIC HRV MICRO-MODULATION...',
+        '[SYSTEM] MOD_PARAMS: LFO=0.15Hz Depth=0.005 Phase=0.0',
         '[SYSTEM] NORMALIZING AMPLITUDE...',
         '[SYSTEM] GENERATING SOVEREIGN FINGERPRINT...'
       ]);
       const metrics = BioSignalProcessor.computeMasterMetrics(sessionSignalData);
+      // Inject micro-mod telemetry into metrics
+      metrics.hrvModulationDepth = dsp.microModulation?.depth || 0;
       setMasterMetrics(metrics);
       
       setTimeout(() => {
         setMasteringLogs(prev => [
           ...prev, 
           `[STATS] RMS_OBSERVED: ${metrics.rms.toFixed(5)}`,
+          `[STATS] CREST_FACTOR: ${metrics.crestFactor.toFixed(3)}`,
           `[HASH] SOVEREIGN_CHECKSUM: ${metrics.checksum}`,
-          '[SUCCESS] GLOBAL_SIGNAL_STABILIZED.',
+          '[SUCCESS] GLOBAL_PILOT_SIGNAL_LOCKED.',
         ]);
         setIsMastering(false);
       }, 1200);
@@ -221,17 +236,23 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
     const bundle = {
       packageID: `HF-DIST-${crypto.randomUUID().slice(0,8).toUpperCase()}`,
       timestamp: Date.now(),
-      protocol: "HEAVENZFIRE_SOVEREIGN_V1",
+      protocol: "HEAVENZFIRE_SOVEREIGN_V1.1",
+      identity: "GLOBAL_PILOT_NODE",
       locale,
+      track: selectedTrack,
       dsp: dsp,
       metrics: masterMetrics,
+      deployment: {
+        deterministicSeed: dsp.microModulation?.deterministicSeed,
+        microModEnabled: true
+      }
     };
     const data = JSON.stringify(bundle, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `HF_DEPLOYMENT_${bundle.packageID}.json`;
+    a.download = `HF_PILOT_NODE_${bundle.packageID}.json`;
     a.click();
   };
 
@@ -249,7 +270,7 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
 
   const handleSubmitFinal = () => {
     const artifact: WonderArtifact | undefined = bioSyncEnabled ? {
-      version: "1.0.0",
+      version: "1.1.0",
       sessionID: crypto.randomUUID(),
       timestamp: Date.now(),
       metrics: {
@@ -294,7 +315,7 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
              <h2 className="text-5xl font-black tracking-tighter uppercase text-white leading-none text-glow">Signal Hub</h2>
           </div>
           <p className="text-zinc-500 text-[10px] mono uppercase tracking-[0.4em] font-black leading-none opacity-60">
-            Global Protocol v3.1_MESH :: {wonderMode ? 'WONDER_ENGAGED' : 'STANDARD_LOGIC'}
+            Global Pilot v3.1_MASTER :: {wonderMode ? 'WONDER_ENGAGED' : 'STANDARD_LOGIC'}
           </p>
         </div>
         <div className="flex gap-4">
@@ -319,8 +340,8 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
                  <Mic className="text-amber-500" size={32} />
                </div>
                <div>
-                 <h3 className="text-3xl font-black uppercase tracking-tighter text-white">Global Synthesis</h3>
-                 <p className="text-[10px] text-zinc-600 mono uppercase tracking-widest font-bold">Multilingual Affirmation Carrier</p>
+                 <h3 className="text-3xl font-black uppercase tracking-tighter text-white">Wonder Affirmation</h3>
+                 <p className="text-[10px] text-zinc-600 mono uppercase tracking-widest font-bold">Autonomic Affirmation Encoding</p>
                </div>
             </div>
             <div className="flex flex-col md:flex-row gap-4">
@@ -328,7 +349,7 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
                 <input 
                   value={customPrompt}
                   onChange={(e) => setCustomPrompt(e.target.value)}
-                  placeholder="Enter therapeutic affirmations..."
+                  placeholder="Enter therapeutic affirmations for autonomic encoding..."
                   className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl px-8 py-6 text-sm focus:border-amber-500 outline-none transition-all mono text-zinc-300 placeholder:text-zinc-700 shadow-inner"
                 />
                 <select 
@@ -349,7 +370,7 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
                 className="px-12 py-6 bg-amber-500 text-black font-black rounded-2xl hover:bg-amber-400 disabled:opacity-50 transition-all active:scale-95 flex items-center justify-center gap-3 shadow-2xl shadow-amber-500/30 uppercase text-xs tracking-tighter"
               >
                 {isGenerating ? <Loader2 className="animate-spin" /> : <Volume2 size={24} />}
-                Lock_Locale
+                Synthesize
               </button>
             </div>
           </section>
@@ -524,6 +545,16 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
                   ))}
                 </div>
               </div>
+
+              <div className="pt-4 border-t border-zinc-900">
+                <p className="text-[9px] mono text-zinc-700 uppercase font-black tracking-widest mb-3 flex items-center gap-2">
+                  <Activity size={10} /> Autonomic_MicroMod
+                </p>
+                <div className="flex items-center justify-between bg-zinc-900/50 p-3 rounded-xl border border-zinc-800">
+                  <span className="text-[10px] mono text-zinc-500">HRV_LFO_DEPTH</span>
+                  <span className="text-[10px] mono text-amber-500 font-bold">{(dsp.microModulation?.depth || 0) * 1000}m%</span>
+                </div>
+              </div>
               
               <DspControl label="STFT Denoise" value={dsp.denoiseAmount} onChange={(v) => setDsp({...dsp, denoiseAmount: v})} unit="%" />
               <DspControl label="Multiband Energy" value={dsp.compressionRatio} onChange={(v) => setDsp({...dsp, compressionRatio: v})} min={1} max={20} unit=":1" />
@@ -609,7 +640,7 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
                         </div>
                      </div>
                      <button onClick={buildDeploymentBundle} className="p-6 bg-amber-500/10 border border-amber-500/30 rounded-[2.5rem] flex items-center justify-center gap-4 text-amber-500 hover:bg-amber-500/20 transition-all font-black mono text-xs uppercase tracking-[0.3em] shadow-2xl active:scale-[0.98]">
-                       <Archive size={20} /> BUILD_SOVEREIGN_DIST_BUNDLE
+                       <Archive size={20} /> BUILD_GLOBAL_PILOT_BUNDLE
                      </button>
                    </div>
                  )}
@@ -620,7 +651,7 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
                  <div className="grid grid-cols-2 gap-5">
                     <MasterMetric label="RMS_POWER" value={masterMetrics?.rms.toFixed(5) || '----'} />
                     <MasterMetric label="PEAK_MAG" value={masterMetrics?.peak.toFixed(5) || '----'} />
-                    <MasterMetric label="REVERB_RT60" value={masterMetrics ? `${masterMetrics.rt60_sec.toFixed(2)}s` : '----'} />
+                    <MasterMetric label="HRV_MOD" value={masterMetrics?.hrvModulationDepth ? `${(masterMetrics.hrvModulationDepth * 1000).toFixed(1)}m%` : '----'} />
                     <MasterMetric label="TAIL_MAG" value={masterMetrics ? `${masterMetrics.tail_rms_db.toFixed(1)}dB` : '----'} />
                  </div>
                  <div className="pt-16 space-y-8">
@@ -640,7 +671,7 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
               <span className="text-[10px] mono text-zinc-600 uppercase font-black tracking-widest">Engine: Wonder_V3.1_GLOBAL</span>
            </div>
            <div className="w-2 h-2 rounded-full bg-zinc-900"></div>
-           <span className="text-[10px] mono text-zinc-700 uppercase font-black tracking-[0.2em] italic">GLOBAL_LOCALE: {locale}</span>
+           <span className="text-[10px] mono text-zinc-700 uppercase font-black tracking-[0.2em] italic">PILOT_LOCALE: {locale}</span>
         </div>
         {moodHistory.length > 0 && moodHistory[moodHistory.length - 1].artifact && (
           <button onClick={exportArtifact} className="flex items-center gap-4 px-8 py-3 rounded-2xl bg-zinc-900 border border-zinc-800 text-[10px] font-black mono text-zinc-500 hover:text-amber-500 hover:border-amber-500/40 transition-all uppercase tracking-[0.3em] active:scale-95">

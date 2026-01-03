@@ -11,12 +11,20 @@ export interface AudioTrack {
 export type GridFrequency = '50Hz' | '60Hz';
 export type SignalLocale = 'EN' | 'ES' | 'AR' | 'ZH' | 'HI';
 
+export interface MicroModulationParams {
+  lfoFreq: number; // 0.1 - 0.3 Hz
+  depth: number; // 0 - 0.01
+  phaseShift: number; // 0 - 2pi
+  deterministicSeed: number;
+}
+
 export interface DSPConfig {
   denoiseAmount: number; // 0-100
   compressionRatio: number; // 1-20
   reverbWet: number; // 0-1
   binauralDepth: number; // 0-1
   gridSync: GridFrequency;
+  microModulation?: MicroModulationParams;
 }
 
 export interface BioMetrics {
@@ -33,6 +41,28 @@ export interface SignalMetrics {
   rt60_sec: number;
   tail_rms_db: number;
   checksum: string;
+  hrvModulationDepth?: number;
+}
+
+export interface MeshBundle {
+  bundleID: string;
+  checksum: string;
+  timestamp: string;
+  identity: string;
+  protocol: string;
+  track: AudioTrack;
+  dsp: DSPConfig;
+  metrics: SignalMetrics;
+  affirmations: Array<{ locale: SignalLocale; content: string }>;
+  replicationLog: Array<{ nodeID: string; received: string }>;
+}
+
+export interface PeerNode {
+  id: string;
+  status: 'ONLINE' | 'OFFLINE' | 'SYNCING';
+  latency: number;
+  bundleCount: number;
+  lastSeen: string;
 }
 
 export interface WonderArtifact {

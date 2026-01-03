@@ -47,7 +47,10 @@ export const BASELINE_TRACKS: AudioTrack[] = [
 export const SYSTEM_MANIFESTO = `Autonomous Digital Agents for Suffering Reduction.
 Deterministic Signal Pipelines :: Sovereign Auditory Grounding.
 Precision as salvation. Signal as medicine. 
-Locking the future through reproducible artifacts.`;
+Locking the future through reproducible artifacts.
+
+v1.2 Mesh Protocol: Sovereign Peer-to-Peer Replication active. 
+Offline internet packets enabled. Autonomic mesh sync initiated.`;
 
 export const DEPLOYMENT_ROADMAP = [
   {
@@ -64,8 +67,8 @@ export const DEPLOYMENT_ROADMAP = [
   },
   {
     month: 3,
-    title: "Sovereign Scaling",
-    objective: "Unrestricted gift distribution via offline hardware nodes.",
+    title: "Sovereign Mesh Scaling",
+    objective: "Unrestricted gift distribution via offline mesh hardware nodes.",
     status: "PENDING"
   }
 ];
@@ -76,8 +79,13 @@ export const GOLDEN_BASELINE: GoldenTest[] = [
     input: {
       before: 9,
       after: 2,
-      // Fix: Added missing gridSync property to satisfy DSPConfig type requirements
-      dsp: { denoiseAmount: 40, compressionRatio: 4, reverbWet: 0.3, binauralDepth: 0.8, gridSync: '60Hz' }
+      dsp: { 
+        denoiseAmount: 40, 
+        compressionRatio: 4, 
+        reverbWet: 0.3, 
+        binauralDepth: 0.8, 
+        gridSync: '60Hz' 
+      }
     },
     expected: {
       delta: 7,
@@ -89,8 +97,13 @@ export const GOLDEN_BASELINE: GoldenTest[] = [
     input: {
       before: 10,
       after: 4,
-      // Fix: Added missing gridSync property to satisfy DSPConfig type requirements
-      dsp: { denoiseAmount: 80, compressionRatio: 12, reverbWet: 0.1, binauralDepth: 1.0, gridSync: '60Hz' }
+      dsp: { 
+        denoiseAmount: 80, 
+        compressionRatio: 12, 
+        reverbWet: 0.1, 
+        binauralDepth: 1.0, 
+        gridSync: '60Hz' 
+      }
     },
     expected: {
       delta: 6,
