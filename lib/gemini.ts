@@ -1,5 +1,6 @@
 
 import { GoogleGenAI, Modality, GenerateContentResponse } from "@google/genai";
+import { SignalLocale } from "../types";
 
 export const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -44,7 +45,7 @@ export async function analyzeMoodTrends(history: any[]) {
   const historyText = JSON.stringify(history);
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: `Analyze this sovereign signal history for trends in suffering reduction. Provide a technical, stabilizing summary of progress. Treat the data as telemetry from a deterministic signal pipeline. History: ${historyText}`,
+    contents: `Analyze this sovereign signal history for global trends in suffering reduction. Provide a technical summary of node stability. History: ${historyText}`,
     config: {
       systemInstruction: GROUNDED_INSTRUCTION
     }
@@ -52,17 +53,25 @@ export async function analyzeMoodTrends(history: any[]) {
   return response.text;
 }
 
-export async function generateTherapeuticSpeech(text: string) {
+export async function generateTherapeuticSpeech(text: string, locale: SignalLocale = 'EN') {
   const ai = getAI();
+  const voiceMap: Record<SignalLocale, string> = {
+    'EN': 'Kore',
+    'ES': 'Puck',
+    'AR': 'Zephyr',
+    'ZH': 'Charon',
+    'HI': 'Fenrir'
+  };
+
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash-preview-tts",
-    contents: [{ parts: [{ text: `Synthesize signal with deep calm and therapeutic precision: ${text}` }] }],
+    contents: [{ parts: [{ text: `Synthesize therapeutic affirmation in ${locale}: ${text}` }] }],
     config: {
       systemInstruction: GROUNDED_INSTRUCTION,
       responseModalities: [Modality.AUDIO],
       speechConfig: {
         voiceConfig: {
-          prebuiltVoiceConfig: { voiceName: 'Kore' },
+          prebuiltVoiceConfig: { voiceName: voiceMap[locale] },
         },
       },
     },
@@ -84,7 +93,7 @@ export async function transcribeAudio(base64Data: string) {
             data: base64Data,
           },
         },
-        { text: "Accurately transcribe this signal telemetry. Capture observations about mental state or magnitude of suffering precisely." }
+        { text: "Accurately transcribe this signal telemetry for global log aggregation." }
       ],
     },
     config: {
@@ -95,7 +104,6 @@ export async function transcribeAudio(base64Data: string) {
   return response.text;
 }
 
-// Audio Decoding Utility
 export function decodeBase64(base64: string) {
   const binaryString = atob(base64);
   const len = binaryString.length;

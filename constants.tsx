@@ -76,7 +76,8 @@ export const GOLDEN_BASELINE: GoldenTest[] = [
     input: {
       before: 9,
       after: 2,
-      dsp: { denoiseAmount: 40, compressionRatio: 4, reverbWet: 0.3, binauralDepth: 0.8 }
+      // Fix: Added missing gridSync property to satisfy DSPConfig type requirements
+      dsp: { denoiseAmount: 40, compressionRatio: 4, reverbWet: 0.3, binauralDepth: 0.8, gridSync: '60Hz' }
     },
     expected: {
       delta: 7,
@@ -88,7 +89,8 @@ export const GOLDEN_BASELINE: GoldenTest[] = [
     input: {
       before: 10,
       after: 4,
-      dsp: { denoiseAmount: 80, compressionRatio: 12, reverbWet: 0.1, binauralDepth: 1.0 }
+      // Fix: Added missing gridSync property to satisfy DSPConfig type requirements
+      dsp: { denoiseAmount: 80, compressionRatio: 12, reverbWet: 0.1, binauralDepth: 1.0, gridSync: '60Hz' }
     },
     expected: {
       delta: 6,

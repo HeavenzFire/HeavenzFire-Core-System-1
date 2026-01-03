@@ -24,10 +24,11 @@ import {
   FileJson,
   Fingerprint,
   Archive,
-  XCircle
+  Globe,
+  Waves
 } from 'lucide-react';
 import { BASELINE_TRACKS } from '../constants';
-import { AudioTrack, MoodEntry, DSPConfig, BioMetrics, WonderArtifact, SignalMetrics } from '../types';
+import { AudioTrack, MoodEntry, DSPConfig, BioMetrics, WonderArtifact, SignalMetrics, SignalLocale, GridFrequency } from '../types';
 import Visualizer from '../components/Visualizer';
 import PulseVisualizer from '../components/PulseVisualizer';
 import { generateTherapeuticSpeech, decodeBase64, decodeAudioData } from '../lib/gemini';
@@ -47,7 +48,6 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
   const [notes, setNotes] = useState('');
   const [progress, setProgress] = useState(0);
   
-  // Wonder Protocol State
   const [wonderMode, setWonderMode] = useState(true);
   const [bioSyncEnabled, setBioSyncEnabled] = useState(false);
   const [bioMetrics, setBioMetrics] = useState<BioMetrics>({ bpm: 0, rmssd: 0, confidence: 0, timestamp: 0 });
@@ -56,26 +56,24 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
   const [sessionBioHistory, setSessionBioHistory] = useState<BioMetrics[]>([]);
   const [sessionSignalData, setSessionSignalData] = useState<number[]>([]);
   
-  // Mastering State
   const [masteringLogs, setMasteringLogs] = useState<string[]>([]);
   const [isMastering, setIsMastering] = useState(false);
   const [masterMetrics, setMasterMetrics] = useState<SignalMetrics | null>(null);
 
-  // Custom Speech Synthesis
   const [customPrompt, setCustomPrompt] = useState('');
+  const [locale, setLocale] = useState<SignalLocale>('EN');
   const [isGenerating, setIsGenerating] = useState(false);
   const [ttsAudioBuffer, setTtsAudioBuffer] = useState<AudioBuffer | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
 
-  // Hardened DSP State
   const [dsp, setDsp] = useState<DSPConfig>({
     denoiseAmount: 40,
     compressionRatio: 4,
     reverbWet: 0.3,
-    binauralDepth: 0.8
+    binauralDepth: 0.8,
+    gridSync: '60Hz'
   });
 
-  // Bio-Signal Simulation & Closed-Loop Adaptation
   useEffect(() => {
     let timer: any;
     if (isPlaying) {
@@ -131,7 +129,7 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
     if (!customPrompt.trim()) return;
     setIsGenerating(true);
     try {
-      const base64 = await generateTherapeuticSpeech(customPrompt);
+      const base64 = await generateTherapeuticSpeech(customPrompt, locale);
       if (base64) {
         if (!audioCtxRef.current) audioCtxRef.current = new AudioContext();
         const bytes = decodeBase64(base64);
@@ -139,8 +137,8 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
         setTtsAudioBuffer(buffer);
         
         const customTrack: AudioTrack = {
-          id: 'custom-tts',
-          name: 'Affirmation Signal',
+          id: `custom-${locale}`,
+          name: `${locale}_Affirmation_Signal`,
           category: 'Resilience',
           baseFrequency: 432,
           duration: buffer.duration,
@@ -190,9 +188,9 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
     setIsMastering(true);
     setMasteringLogs([
       '[SYSTEM] INITIALIZING MASTERING ENGINE v3.1_OFFLINE', 
+      `[SYSTEM] GRID_SYNC_LOCK: ${dsp.gridSync}`,
       '[SYSTEM] LOADING SESSION TELEMETRY...', 
       '[SYSTEM] BUFFERING SIGNAL_ARRAY (N=4000)',
-      '[SYSTEM] DETECTING DC_OFFSET...'
     ]);
     
     setTimeout(() => {
@@ -210,11 +208,8 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
         setMasteringLogs(prev => [
           ...prev, 
           `[STATS] RMS_OBSERVED: ${metrics.rms.toFixed(5)}`,
-          `[STATS] PEAK_DETECTED: ${metrics.peak.toFixed(5)}`,
-          `[STATS] CREST_FACTOR: ${metrics.crestFactor.toFixed(3)}`,
           `[HASH] SOVEREIGN_CHECKSUM: ${metrics.checksum}`,
-          '[SUCCESS] SIGNAL_STABILIZED.',
-          '[READY] ARTIFACT AWAITING BUNDLE EXPORT.'
+          '[SUCCESS] GLOBAL_SIGNAL_STABILIZED.',
         ]);
         setIsMastering(false);
       }, 1200);
@@ -223,29 +218,14 @@ const AudioLabView: React.FC<Props> = ({ onMoodUpdate, moodHistory }) => {
 
   const buildDeploymentBundle = () => {
     if (!masterMetrics || !selectedTrack) return;
-    
     const bundle = {
       packageID: `HF-DIST-${crypto.randomUUID().slice(0,8).toUpperCase()}`,
       timestamp: Date.now(),
       protocol: "HEAVENZFIRE_SOVEREIGN_V1",
-      identity: "AUTONOMOUS_DIGITAL_AGENT",
-      track: selectedTrack,
+      locale,
       dsp: dsp,
       metrics: masterMetrics,
-      readme: `HEAVENZFIRE CRISIS AUDIO KIT v1.0
----------------------------------------
-DETERMINISTIC CHECKSUM: ${masterMetrics.checksum}
-PROTOCOL: SOVEREIGN_V1
-
-THIS ARTIFACT IS A DETERMINISTIC SIGNAL PIPELINE. 
-NON-BIOLOGICAL. OFFLINE_SOVEREIGN.
-
-INSTRUCTIONS:
-1. DEPLOY IN SILENT, STABLE ENVIRONMENT.
-2. VERIFY CHECKSUM VIA HARNESS BEFORE USAGE.
-3. MONITOR PROTOCOL SUCCESS RATE LOCALLY.`
     };
-
     const data = JSON.stringify(bundle, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -253,14 +233,11 @@ INSTRUCTIONS:
     a.href = url;
     a.download = `HF_DEPLOYMENT_${bundle.packageID}.json`;
     a.click();
-    
-    setMasteringLogs(prev => [...prev, `[DEPLOY] SOVEREIGN BUNDLE EXPORTED: ${bundle.packageID}`]);
   };
 
   const exportArtifact = () => {
     const lastEntry = moodHistory[moodHistory.length - 1];
     if (!lastEntry || !lastEntry.artifact) return;
-    
     const data = JSON.stringify(lastEntry.artifact, null, 2);
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -312,12 +289,12 @@ INSTRUCTIONS:
         <div className="space-y-4">
           <div className="flex items-center gap-3">
              <div className="p-2.5 bg-amber-500 rounded-lg shadow-[0_0_20px_rgba(245,158,11,0.3)]">
-                <ShieldCheck className="text-black" size={24} />
+                <Globe className="text-black" size={24} />
              </div>
-             <h2 className="text-5xl font-black tracking-tighter uppercase text-white leading-none">Signal Hub</h2>
+             <h2 className="text-5xl font-black tracking-tighter uppercase text-white leading-none text-glow">Signal Hub</h2>
           </div>
           <p className="text-zinc-500 text-[10px] mono uppercase tracking-[0.4em] font-black leading-none opacity-60">
-            Sovereign Pipeline v3.1_MASTER :: {wonderMode ? 'WONDER_ENGAGED' : 'STANDARD_LOGIC'}
+            Global Protocol v3.1_MESH :: {wonderMode ? 'WONDER_ENGAGED' : 'STANDARD_LOGIC'}
           </p>
         </div>
         <div className="flex gap-4">
@@ -342,24 +319,37 @@ INSTRUCTIONS:
                  <Mic className="text-amber-500" size={32} />
                </div>
                <div>
-                 <h3 className="text-3xl font-black uppercase tracking-tighter text-white">Affirmation Synthesis</h3>
-                 <p className="text-[10px] text-zinc-600 mono uppercase tracking-widest font-bold">Deterministic Carrier Encoding</p>
+                 <h3 className="text-3xl font-black uppercase tracking-tighter text-white">Global Synthesis</h3>
+                 <p className="text-[10px] text-zinc-600 mono uppercase tracking-widest font-bold">Multilingual Affirmation Carrier</p>
                </div>
             </div>
-            <div className="flex gap-4">
-              <input 
-                value={customPrompt}
-                onChange={(e) => setCustomPrompt(e.target.value)}
-                placeholder="Enter therapeutic affirmations for deterministic synthesis..."
-                className="flex-1 bg-zinc-900/50 border border-zinc-800 rounded-2xl px-8 py-6 text-sm focus:border-amber-500 outline-none transition-all mono text-zinc-300 placeholder:text-zinc-700 shadow-inner"
-              />
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative">
+                <input 
+                  value={customPrompt}
+                  onChange={(e) => setCustomPrompt(e.target.value)}
+                  placeholder="Enter therapeutic affirmations..."
+                  className="w-full bg-zinc-900/50 border border-zinc-800 rounded-2xl px-8 py-6 text-sm focus:border-amber-500 outline-none transition-all mono text-zinc-300 placeholder:text-zinc-700 shadow-inner"
+                />
+                <select 
+                  value={locale}
+                  onChange={(e) => setLocale(e.target.value as SignalLocale)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-zinc-800 border border-zinc-700 text-[10px] mono font-bold text-amber-500 p-1.5 rounded-lg focus:border-amber-500 outline-none cursor-pointer"
+                >
+                  <option value="EN">EN_SIGNAL</option>
+                  <option value="ES">ES_SIGNAL</option>
+                  <option value="AR">AR_SIGNAL</option>
+                  <option value="ZH">ZH_SIGNAL</option>
+                  <option value="HI">HI_SIGNAL</option>
+                </select>
+              </div>
               <button 
                 onClick={handleGenerateCustom}
                 disabled={isGenerating || !customPrompt.trim()}
-                className="px-12 bg-amber-500 text-black font-black rounded-2xl hover:bg-amber-400 disabled:opacity-50 transition-all active:scale-95 flex items-center gap-3 shadow-2xl shadow-amber-500/30 uppercase text-xs tracking-tighter"
+                className="px-12 py-6 bg-amber-500 text-black font-black rounded-2xl hover:bg-amber-400 disabled:opacity-50 transition-all active:scale-95 flex items-center justify-center gap-3 shadow-2xl shadow-amber-500/30 uppercase text-xs tracking-tighter"
               >
                 {isGenerating ? <Loader2 className="animate-spin" /> : <Volume2 size={24} />}
-                Synthesize
+                Lock_Locale
               </button>
             </div>
           </section>
@@ -517,43 +507,28 @@ INSTRUCTIONS:
                 <Sliders size={22} className="text-amber-500" />
                 <h4 className="text-[11px] font-black mono uppercase tracking-widest text-zinc-500">DSP Chain Topology</h4>
               </div>
-              
-              <DspControl 
-                label="STFT Denoise" 
-                value={dsp.denoiseAmount} 
-                onChange={(v) => setDsp({...dsp, denoiseAmount: v})} 
-                unit="%"
-              />
-              <DspControl 
-                label="Multiband Energy" 
-                value={dsp.compressionRatio} 
-                onChange={(v) => setDsp({...dsp, compressionRatio: v})} 
-                min={1} max={20}
-                unit=":1"
-              />
-              <DspControl 
-                label="Convolution Wet" 
-                value={Math.round(dsp.reverbWet * 100)} 
-                onChange={(v) => setDsp({...dsp, reverbWet: v/100})} 
-                unit="%"
-              />
-              <DspControl 
-                label="Binaural Breadth" 
-                value={Math.round(dsp.binauralDepth * 100)} 
-                onChange={(v) => setDsp({...dsp, binauralDepth: v/100})} 
-                unit="%"
-              />
-              
-              {bioSyncEnabled && (
-                <div className="p-6 bg-rose-500/5 border border-rose-500/20 rounded-[2rem] animate-pulse">
-                   <p className="text-[10px] mono text-rose-500 font-black uppercase flex items-center gap-4">
-                     <Heart size={14} fill="currentColor" /> Closed-Loop Drift
-                   </p>
-                   <p className="text-[9px] mono text-zinc-700 mt-3 uppercase italic leading-relaxed font-bold">
-                     Hardware params adapting via physiological telemetry.
-                   </p>
+
+              <div className="space-y-4">
+                <p className="text-[9px] mono text-zinc-700 uppercase font-black tracking-widest flex items-center gap-2">
+                  <Waves size={10} /> Grid_Sync_Lock
+                </p>
+                <div className="flex gap-2">
+                  {(['50Hz', '60Hz'] as GridFrequency[]).map(freq => (
+                    <button 
+                      key={freq}
+                      onClick={() => setDsp({...dsp, gridSync: freq})}
+                      className={`flex-1 py-2 rounded-xl text-[10px] mono font-bold border transition-all ${dsp.gridSync === freq ? 'bg-amber-500 text-black border-amber-500' : 'bg-zinc-900 text-zinc-600 border-zinc-800'}`}
+                    >
+                      {freq}
+                    </button>
+                  ))}
                 </div>
-              )}
+              </div>
+              
+              <DspControl label="STFT Denoise" value={dsp.denoiseAmount} onChange={(v) => setDsp({...dsp, denoiseAmount: v})} unit="%" />
+              <DspControl label="Multiband Energy" value={dsp.compressionRatio} onChange={(v) => setDsp({...dsp, compressionRatio: v})} min={1} max={20} unit=":1" />
+              <DspControl label="Convolution Wet" value={Math.round(dsp.reverbWet * 100)} onChange={(v) => setDsp({...dsp, reverbWet: v/100})} unit="%" />
+              <DspControl label="Binaural Breadth" value={Math.round(dsp.binauralDepth * 100)} onChange={(v) => setDsp({...dsp, binauralDepth: v/100})} unit="%" />
             </div>
           </aside>
         </div>
@@ -573,12 +548,7 @@ INSTRUCTIONS:
                 <label className="text-[10px] mono font-black text-zinc-600 uppercase tracking-widest">Residual Magnitude</label>
                 <span className="text-7xl font-black text-amber-500 tracking-tighter drop-shadow-[0_0_20px_rgba(245,158,11,0.4)]">{postMood}</span>
               </div>
-              <input 
-                type="range" min="0" max="10" step="1" 
-                value={postMood}
-                onChange={(e) => setPostMood(parseInt(e.target.value))}
-                className="w-full h-1.5 bg-zinc-900 rounded-lg appearance-none cursor-pointer accent-amber-500"
-              />
+              <input type="range" min="0" max="10" step="1" value={postMood} onChange={(e) => setPostMood(parseInt(e.target.value))} className="w-full h-1.5 bg-zinc-900 rounded-lg appearance-none cursor-pointer accent-amber-500" />
             </div>
 
             <div className="p-10 bg-black/40 border border-zinc-900 rounded-[2.5rem] space-y-3 text-center shadow-inner">
@@ -592,10 +562,7 @@ INSTRUCTIONS:
               </p>
             </div>
 
-            <button 
-              onClick={startMasteringPhase}
-              className="w-full py-7 bg-amber-500 text-black font-black rounded-[1.8rem] active:scale-[0.97] transition-all mono tracking-tighter uppercase text-base shadow-2xl shadow-amber-500/30 flex items-center justify-center gap-4"
-            >
+            <button onClick={startMasteringPhase} className="w-full py-7 bg-amber-500 text-black font-black rounded-[1.8rem] active:scale-[0.97] transition-all mono tracking-tighter uppercase text-base shadow-2xl shadow-amber-500/30 flex items-center justify-center gap-4">
               <Package size={24} /> INITIALIZE_MASTERING
             </button>
           </div>
@@ -605,9 +572,7 @@ INSTRUCTIONS:
       {sessionPhase === 'MASTERING' && (
         <div className="max-w-4xl mx-auto bg-zinc-950 border border-zinc-900 rounded-[4rem] overflow-hidden shadow-[0_0_150px_rgba(0,0,0,0.7)] animate-in fade-in zoom-in-95 duration-700">
            <div className="bg-zinc-900/50 p-10 border-b border-zinc-900 flex justify-between items-center relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-amber-500/10">
-                 <div className="h-full bg-amber-500 animate-[shimmer_2.5s_infinite] w-1/3"></div>
-              </div>
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-amber-500/10"><div className="h-full bg-amber-500 animate-[shimmer_2.5s_infinite] w-1/3"></div></div>
               <div className="flex items-center gap-6 relative z-10">
                 <Terminal className="text-amber-500" size={28} />
                 <div className="space-y-1">
@@ -630,30 +595,20 @@ INSTRUCTIONS:
                         <span className="leading-relaxed tracking-wider">{log}</span>
                       </div>
                     ))}
-                    {isMastering && (
-                      <div className="flex gap-5 text-amber-500 animate-pulse mt-6">
-                        <span className="opacity-20 shrink-0">[{masteringLogs.length.toString().padStart(3, '0')}]</span>
-                        <span className="font-black tracking-widest uppercase">LADDER_TRANSFORM_IN_PROGRESS...</span>
-                      </div>
-                    )}
+                    {isMastering && <div className="flex gap-5 text-amber-500 animate-pulse mt-6"><span className="opacity-20 shrink-0">[{masteringLogs.length.toString().padStart(3, '0')}]</span><span className="font-black tracking-widest uppercase">LADDER_TRANSFORM_IN_PROGRESS...</span></div>}
                     <div ref={(el) => el?.scrollIntoView({ behavior: 'smooth' })} />
                  </div>
                  
                  {!isMastering && masterMetrics && (
                    <div className="flex flex-col gap-5 animate-in slide-in-from-bottom-2 duration-500">
                      <div className="p-8 bg-emerald-500/5 border border-emerald-500/20 rounded-[2.5rem] flex items-center gap-8 shadow-inner">
-                        <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 shadow-xl shadow-emerald-500/5">
-                          <FileJson size={32} />
-                        </div>
+                        <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 shadow-xl shadow-emerald-500/5"><FileJson size={32} /></div>
                         <div className="space-y-1.5">
                           <p className="text-sm font-black mono text-emerald-500 uppercase tracking-widest">Sovereign Artifact Integrity: NOMINAL</p>
                           <p className="text-[10px] text-zinc-700 mono uppercase tracking-widest font-bold">CHECKSUM: <span className="text-zinc-400 font-black">{masterMetrics.checksum.toUpperCase()}</span></p>
                         </div>
                      </div>
-                     <button 
-                        onClick={buildDeploymentBundle}
-                        className="p-6 bg-amber-500/10 border border-amber-500/30 rounded-[2.5rem] flex items-center justify-center gap-4 text-amber-500 hover:bg-amber-500/20 transition-all font-black mono text-xs uppercase tracking-[0.3em] shadow-2xl active:scale-[0.98]"
-                     >
+                     <button onClick={buildDeploymentBundle} className="p-6 bg-amber-500/10 border border-amber-500/30 rounded-[2.5rem] flex items-center justify-center gap-4 text-amber-500 hover:bg-amber-500/20 transition-all font-black mono text-xs uppercase tracking-[0.3em] shadow-2xl active:scale-[0.98]">
                        <Archive size={20} /> BUILD_SOVEREIGN_DIST_BUNDLE
                      </button>
                    </div>
@@ -668,65 +623,39 @@ INSTRUCTIONS:
                     <MasterMetric label="REVERB_RT60" value={masterMetrics ? `${masterMetrics.rt60_sec.toFixed(2)}s` : '----'} />
                     <MasterMetric label="TAIL_MAG" value={masterMetrics ? `${masterMetrics.tail_rms_db.toFixed(1)}dB` : '----'} />
                  </div>
-
                  <div className="pt-16 space-y-8">
-                    <button 
-                      onClick={handleSubmitFinal}
-                      disabled={isMastering}
-                      className="w-full py-6 bg-white hover:bg-zinc-100 text-black font-black rounded-[2rem] transition-all disabled:opacity-50 active:scale-[0.98] mono uppercase text-sm flex items-center justify-center gap-4 shadow-[0_0_40px_rgba(255,255,255,0.1)]"
-                    >
+                    <button onClick={handleSubmitFinal} disabled={isMastering} className="w-full py-6 bg-white hover:bg-zinc-100 text-black font-black rounded-[2rem] transition-all disabled:opacity-50 active:scale-[0.98] mono uppercase text-sm flex items-center justify-center gap-4 shadow-[0_0_40px_rgba(255,255,255,0.1)]">
                       LOCK_TO_SOVEREIGN_HISTORY <ArrowRight size={22} />
                     </button>
-                    <div className="flex gap-4 px-6 items-start opacity-40">
-                       <ShieldAlert className="text-zinc-800 shrink-0 mt-1" size={20} />
-                       <p className="text-[9px] mono text-zinc-800 uppercase italic leading-relaxed text-center font-black">
-                          Finalization hard-locks the deterministic signal state and bio-telemetry into your local node history. Sequence becomes immutable.
-                       </p>
-                    </div>
                  </div>
               </div>
            </div>
         </div>
       )}
 
-      {/* Persistence Controls */}
       <footer className="pt-16 flex justify-between items-center border-t border-zinc-900 opacity-20 hover:opacity-100 transition-opacity duration-1000">
         <div className="flex items-center gap-8">
            <div className="flex items-center gap-3">
               <Database size={16} className="text-zinc-600" />
-              <span className="text-[10px] mono text-zinc-600 uppercase font-black tracking-widest">Engine: Wonder_V3.1_MASTER</span>
+              <span className="text-[10px] mono text-zinc-600 uppercase font-black tracking-widest">Engine: Wonder_V3.1_GLOBAL</span>
            </div>
            <div className="w-2 h-2 rounded-full bg-zinc-900"></div>
-           <span className="text-[10px] mono text-zinc-700 uppercase font-black tracking-[0.2em] italic">SOVEREIGN_NODE_STABLE: true</span>
+           <span className="text-[10px] mono text-zinc-700 uppercase font-black tracking-[0.2em] italic">GLOBAL_LOCALE: {locale}</span>
         </div>
         {moodHistory.length > 0 && moodHistory[moodHistory.length - 1].artifact && (
-          <button 
-            onClick={exportArtifact}
-            className="flex items-center gap-4 px-8 py-3 rounded-2xl bg-zinc-900 border border-zinc-800 text-[10px] font-black mono text-zinc-500 hover:text-amber-500 hover:border-amber-500/40 transition-all uppercase tracking-[0.3em] active:scale-95"
-          >
+          <button onClick={exportArtifact} className="flex items-center gap-4 px-8 py-3 rounded-2xl bg-zinc-900 border border-zinc-800 text-[10px] font-black mono text-zinc-500 hover:text-amber-500 hover:border-amber-500/40 transition-all uppercase tracking-[0.3em] active:scale-95">
             <Download size={18} /> EXPORT_LATEST_ARTIFACT
           </button>
         )}
       </footer>
 
       <style>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(300%); }
-        }
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 5px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #000;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #18181b;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #27272a;
-        }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #000; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #18181b; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #27272a; }
+        .text-glow { text-shadow: 0 0 20px rgba(255,255,255,0.1); }
       `}</style>
     </div>
   );
@@ -745,12 +674,7 @@ const DspControl: React.FC<{ label: string; value: number; onChange: (v: number)
       <span className="text-[10px] mono text-zinc-600 font-black uppercase tracking-widest">{label}</span>
       <span className="text-[10px] mono text-amber-500 font-black tracking-widest">{value}{unit}</span>
     </div>
-    <input 
-      type="range" min={min} max={max} step="1" 
-      value={value}
-      onChange={(e) => onChange(parseInt(e.target.value))}
-      className="w-full h-1.5 bg-zinc-900 rounded-lg appearance-none cursor-pointer accent-zinc-500 hover:accent-amber-500 transition-all"
-    />
+    <input type="range" min={min} max={max} step="1" value={value} onChange={(e) => onChange(parseInt(e.target.value))} className="w-full h-1.5 bg-zinc-900 rounded-lg appearance-none cursor-pointer accent-zinc-500 hover:accent-amber-500 transition-all" />
   </div>
 );
 

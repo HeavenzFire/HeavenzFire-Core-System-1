@@ -8,11 +8,15 @@ export interface AudioTrack {
   description: string;
 }
 
+export type GridFrequency = '50Hz' | '60Hz';
+export type SignalLocale = 'EN' | 'ES' | 'AR' | 'ZH' | 'HI';
+
 export interface DSPConfig {
   denoiseAmount: number; // 0-100
   compressionRatio: number; // 1-20
   reverbWet: number; // 0-1
   binauralDepth: number; // 0-1
+  gridSync: GridFrequency;
 }
 
 export interface BioMetrics {
@@ -67,7 +71,8 @@ export enum AppView {
   JOURNAL = 'JOURNAL',
   ANALYTICS = 'ANALYTICS',
   HARNESS = 'HARNESS',
-  INTELLIGENCE = 'INTELLIGENCE'
+  INTELLIGENCE = 'INTELLIGENCE',
+  REPLICATION = 'REPLICATION'
 }
 
 export interface GoldenTest {

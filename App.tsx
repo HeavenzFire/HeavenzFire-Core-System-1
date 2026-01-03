@@ -12,7 +12,7 @@ import {
   Terminal,
   ShieldCheck,
   BrainCircuit,
-  X
+  Share2
 } from 'lucide-react';
 import { AppView, MoodEntry, VerificationStatus } from './types';
 import DashboardView from './views/DashboardView';
@@ -21,6 +21,7 @@ import JournalView from './views/JournalView';
 import AnalyticsView from './views/AnalyticsView';
 import HarnessView from './views/HarnessView';
 import IntelligenceView from './views/IntelligenceView';
+import ReplicationView from './views/ReplicationView';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<AppView>(AppView.DASHBOARD);
@@ -37,16 +38,10 @@ const App: React.FC = () => {
         console.error("Failed to load mood history", e);
       }
     }
-
     const savedVerify = localStorage.getItem('hf_verify_status');
-    if (savedVerify) {
-      setVerification(JSON.parse(savedVerify));
-    }
-
+    if (savedVerify) setVerification(JSON.parse(savedVerify));
     const cookieConsent = localStorage.getItem('hf_cookie_consent');
-    if (!cookieConsent) {
-      setShowCookieBanner(true);
-    }
+    if (!cookieConsent) setShowCookieBanner(true);
   }, []);
 
   const saveHistory = (newHistory: MoodEntry[]) => {
@@ -59,19 +54,10 @@ const App: React.FC = () => {
     localStorage.setItem('hf_verify_status', JSON.stringify(status));
   };
 
-  const acceptCookies = () => {
-    localStorage.setItem('hf_cookie_consent', 'true');
-    setShowCookieBanner(false);
-  };
-
   const renderView = () => {
     switch (currentView) {
       case AppView.DASHBOARD:
-        return <DashboardView 
-          onViewChange={setCurrentView} 
-          moodHistory={moodHistory}
-          verification={verification}
-        />;
+        return <DashboardView onViewChange={setCurrentView} moodHistory={moodHistory} verification={verification} />;
       case AppView.LAB:
         return <AudioLabView onMoodUpdate={saveHistory} moodHistory={moodHistory} />;
       case AppView.JOURNAL:
@@ -82,6 +68,8 @@ const App: React.FC = () => {
         return <HarnessView onVerify={saveVerification} status={verification} />;
       case AppView.INTELLIGENCE:
         return <IntelligenceView />;
+      case AppView.REPLICATION:
+        return <ReplicationView moodHistory={moodHistory} />;
       default:
         return <DashboardView onViewChange={setCurrentView} moodHistory={moodHistory} verification={verification} />;
     }
@@ -97,48 +85,19 @@ const App: React.FC = () => {
             </div>
             <div>
               <h1 className="font-black text-lg leading-tight tracking-tighter text-white">HEAVENZFIRE</h1>
-              <p className="text-[10px] text-zinc-500 mono tracking-widest uppercase">SOVEREIGN_V1</p>
+              <p className="text-[10px] text-zinc-500 mono tracking-widest uppercase">GLOBAL_MESH_V1</p>
             </div>
           </div>
 
           <div className="space-y-1">
-            <NavItem 
-              active={currentView === AppView.DASHBOARD} 
-              onClick={() => setCurrentView(AppView.DASHBOARD)} 
-              icon={<Activity size={18} />} 
-              label="Dashboard" 
-            />
-            <NavItem 
-              active={currentView === AppView.LAB} 
-              onClick={() => setCurrentView(AppView.LAB)} 
-              icon={<Volume2 size={18} />} 
-              label="Audio Lab" 
-            />
-            <NavItem 
-              active={currentView === AppView.INTELLIGENCE} 
-              onClick={() => setCurrentView(AppView.INTELLIGENCE)} 
-              icon={<BrainCircuit size={18} />} 
-              label="Research Hub" 
-            />
-            <NavItem 
-              active={currentView === AppView.JOURNAL} 
-              onClick={() => setCurrentView(AppView.JOURNAL)} 
-              icon={<Book size={18} />} 
-              label="Sovereign Log" 
-            />
-            <NavItem 
-              active={currentView === AppView.ANALYTICS} 
-              onClick={() => setCurrentView(AppView.ANALYTICS)} 
-              icon={<BarChart3 size={18} />} 
-              label="Metrics" 
-            />
+            <NavItem active={currentView === AppView.DASHBOARD} onClick={() => setCurrentView(AppView.DASHBOARD)} icon={<Activity size={18} />} label="Dashboard" />
+            <NavItem active={currentView === AppView.LAB} onClick={() => setCurrentView(AppView.LAB)} icon={<Volume2 size={18} />} label="Signal Hub" />
+            <NavItem active={currentView === AppView.INTELLIGENCE} onClick={() => setCurrentView(AppView.INTELLIGENCE)} icon={<BrainCircuit size={18} />} label="Research Hub" />
+            <NavItem active={currentView === AppView.JOURNAL} onClick={() => setCurrentView(AppView.JOURNAL)} icon={<Book size={18} />} label="Sovereign Log" />
+            <NavItem active={currentView === AppView.ANALYTICS} onClick={() => setCurrentView(AppView.ANALYTICS)} icon={<BarChart3 size={18} />} label="Global Metrics" />
             <div className="pt-4 mt-4 border-t border-zinc-900">
-              <NavItem 
-                active={currentView === AppView.HARNESS} 
-                onClick={() => setCurrentView(AppView.HARNESS)} 
-                icon={<Terminal size={18} />} 
-                label="Verify Harness" 
-              />
+              <NavItem active={currentView === AppView.REPLICATION} onClick={() => setCurrentView(AppView.REPLICATION)} icon={<Share2 size={18} />} label="Replication Portal" />
+              <NavItem active={currentView === AppView.HARNESS} onClick={() => setCurrentView(AppView.HARNESS)} icon={<Terminal size={18} />} label="Verify Harness" />
             </div>
           </div>
         </div>
@@ -147,50 +106,30 @@ const App: React.FC = () => {
           <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
             <div className="flex items-center gap-2 mb-2">
               <Database size={14} className="text-zinc-500" />
-              <span className="text-[10px] mono uppercase text-zinc-500">Integrity Check</span>
+              <span className="text-[10px] mono uppercase text-zinc-500">Node Connectivity</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${verification?.passed ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-rose-500 animate-pulse'}`}></div>
-              <span className="text-xs font-bold mono uppercase tracking-tighter">
-                {verification?.passed ? 'SYSTEM_INTEGRAL' : 'PENDING_VERIFY'}
-              </span>
+              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+              <span className="text-xs font-bold mono uppercase tracking-tighter text-emerald-500">MESH_ACTIVE</span>
             </div>
           </div>
-          <div className="text-[10px] text-zinc-700 mono text-center px-2">
-            BUILD_HASH: 0x2A7C9D<br />
-            REDUCING_SUFFERING_2026
-          </div>
+          <div className="text-[10px] text-zinc-700 mono text-center px-2">BUILD: GLOBAL_v1.0<br />REDUCING_SUFFERING_2026</div>
         </div>
       </nav>
 
       <main className="flex-1 overflow-y-auto p-4 md:p-10 bg-[radial-gradient(circle_at_top_right,rgba(245,158,11,0.03),transparent_40%)]">
-        <div className="max-w-6xl mx-auto pb-24">
-          {renderView()}
-        </div>
+        <div className="max-w-6xl mx-auto pb-24">{renderView()}</div>
       </main>
 
-      {/* Cookie Banner */}
       {showCookieBanner && (
         <div className="fixed bottom-0 left-0 right-0 p-6 md:p-8 z-50 flex justify-center pointer-events-none">
           <div className="w-full max-w-2xl bg-zinc-950/90 border border-zinc-800 p-6 rounded-2xl shadow-2xl backdrop-blur-xl animate-in slide-in-from-bottom-full duration-500 pointer-events-auto">
             <div className="flex flex-col md:flex-row items-center gap-6">
               <div className="flex-1">
-                <div className="flex items-center gap-2 text-amber-500 mb-2">
-                  <ShieldCheck size={20} />
-                  <h4 className="font-black mono uppercase tracking-widest text-[10px]">Data Sovereignty Protocol</h4>
-                </div>
-                <p className="text-sm text-zinc-400 leading-relaxed mono italic">
-                  HeavenzFire utilizes local persistence to maintain your sovereign logs. Minimal cookies are deployed only for node stability and integrity checks.
-                </p>
+                <div className="flex items-center gap-2 text-amber-500 mb-2"><ShieldCheck size={20} /><h4 className="font-black mono uppercase tracking-widest text-[10px]">Mesh Sovereignty Protocol</h4></div>
+                <p className="text-sm text-zinc-400 leading-relaxed mono italic">Node utilizes local persistence to maintain sovereign logs. Global sync occurs only via encrypted, user-initiated replication bundles.</p>
               </div>
-              <div className="flex gap-4 w-full md:w-auto">
-                <button 
-                  onClick={acceptCookies}
-                  className="w-full md:w-auto px-8 py-3 bg-zinc-100 text-black font-black rounded-xl hover:bg-white transition-all active:scale-95 mono uppercase text-xs"
-                >
-                  Accept Cookies
-                </button>
-              </div>
+              <button onClick={() => setShowCookieBanner(false)} className="px-8 py-3 bg-zinc-100 text-black font-black rounded-xl hover:bg-white transition-all active:scale-95 mono uppercase text-xs">Acknowledge</button>
             </div>
           </div>
         </div>
@@ -199,25 +138,9 @@ const App: React.FC = () => {
   );
 };
 
-interface NavItemProps {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  label: string;
-}
-
-const NavItem: React.FC<NavItemProps> = ({ active, onClick, icon, label }) => (
-  <button 
-    onClick={onClick}
-    className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 border ${
-      active 
-        ? 'bg-zinc-900 text-amber-500 border-zinc-800 shadow-lg shadow-black/40' 
-        : 'text-zinc-500 border-transparent hover:text-zinc-300 hover:bg-zinc-900/50 hover:border-zinc-800'
-    }`}
-  >
-    {icon}
-    <span className="font-bold text-sm tracking-tight">{label}</span>
-    {active && <ChevronRight size={14} className="ml-auto opacity-50" />}
+const NavItem: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; label: string }> = ({ active, onClick, icon, label }) => (
+  <button onClick={onClick} className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 border ${active ? 'bg-zinc-900 text-amber-500 border-zinc-800 shadow-lg shadow-black/40' : 'text-zinc-500 border-transparent hover:text-zinc-300 hover:bg-zinc-900/50 hover:border-zinc-800'}`}>
+    {icon}<span className="font-bold text-sm tracking-tight">{label}</span>{active && <ChevronRight size={14} className="ml-auto opacity-50" />}
   </button>
 );
 
