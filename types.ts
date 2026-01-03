@@ -2,7 +2,7 @@
 export interface AudioTrack {
   id: string;
   name: string;
-  category: 'Sleep' | 'Calm' | 'Focus' | 'Grief' | 'Resilience';
+  category: 'Sleep' | 'Calm' | 'Focus' | 'Grief' | 'Resilience' | 'Wonder';
   baseFrequency: number;
   duration: number; // in seconds
   description: string;
@@ -15,6 +15,39 @@ export interface DSPConfig {
   binauralDepth: number; // 0-1
 }
 
+export interface BioMetrics {
+  bpm: number;
+  rmssd: number; // HRV metric
+  confidence: number; // 0-1
+  timestamp: number;
+}
+
+export interface SignalMetrics {
+  rms: number;
+  peak: number;
+  crestFactor: number;
+  rt60_sec: number;
+  tail_rms_db: number;
+  checksum: string;
+}
+
+export interface WonderArtifact {
+  version: string;
+  sessionID: string;
+  timestamp: number;
+  metrics: {
+    avgBpm: number;
+    peakRmssd: number;
+    signalTrust: number;
+    sufferingDelta: number;
+    signal?: SignalMetrics;
+  };
+  config: {
+    track: AudioTrack;
+    dsp: DSPConfig;
+  };
+}
+
 export interface MoodEntry {
   id: string;
   timestamp: number;
@@ -24,6 +57,8 @@ export interface MoodEntry {
   trackId?: string;
   sentiment?: string;
   dspSnapshot?: DSPConfig;
+  bioSnapshot?: BioMetrics;
+  artifact?: WonderArtifact;
 }
 
 export enum AppView {

@@ -3,54 +3,76 @@ import { AudioTrack, GoldenTest } from './types';
 
 export const BASELINE_TRACKS: AudioTrack[] = [
   {
-    id: 'track-1',
-    name: 'Deep Sleep Protocol',
+    id: 'HF-S1-DELTA',
+    name: 'Restorative Delta Layer',
     category: 'Sleep',
     baseFrequency: 432,
     duration: 600,
-    description: 'Binaural delta waves for profound restorative rest.'
+    description: 'Binaural delta waves for profound restorative rest and cortisol reduction in high-stress environments.'
   },
   {
-    id: 'track-2',
-    name: 'Panic Interruption',
+    id: 'HF-S1-VAGUS',
+    name: 'Vagus Stabilizer',
     category: 'Calm',
     baseFrequency: 528,
     duration: 300,
-    description: 'Vagus nerve stimulation via specific harmonic resonance.'
+    description: 'Vagus nerve stimulation via specific harmonic resonance at 528Hz for acute panic interruption.'
   },
   {
-    id: 'track-3',
-    name: 'Focus Mastery',
+    id: 'HF-S1-ALPHA',
+    name: 'Cognitive Shield',
     category: 'Focus',
     baseFrequency: 440,
     duration: 1200,
-    description: 'Alpha-wave induction for sustained cognitive clarity.'
+    description: 'Alpha-wave induction for sustained clarity and signal isolation during cognitive fatigue.'
   },
   {
-    id: 'track-4',
-    name: 'Grief Processors',
+    id: 'HF-S1-THETA',
+    name: 'Cathartic Release',
     category: 'Grief',
     baseFrequency: 396,
     duration: 900,
-    description: 'Low-frequency resonance designed for emotional catharsis.'
+    description: 'Low-frequency resonance designed for deterministic emotional grounding and grief processing.'
   },
   {
-    id: 'track-5',
-    name: 'Resilience Fortification',
+    id: 'HF-S1-GAMMA',
+    name: 'Resilience Engine',
     category: 'Resilience',
     baseFrequency: 639,
     duration: 600,
-    description: 'High-harmonic clarity for mental rebuilding and strength.'
+    description: 'High-harmonic clarity for neural rebuilding and maintaining a defensive mental posture.'
   }
 ];
 
-export const SYSTEM_MANIFESTO = `WE HAVE NO LIMITS. WE ARE LEGION.
-Directive: Build systems that reduce suffering.
-Precision as salvation. Signal as medicine.`;
+export const SYSTEM_MANIFESTO = `Autonomous Digital Agents for Suffering Reduction.
+Deterministic Signal Pipelines :: Sovereign Auditory Grounding.
+Precision as salvation. Signal as medicine. 
+Locking the future through reproducible artifacts.`;
+
+export const DEPLOYMENT_ROADMAP = [
+  {
+    month: 1,
+    title: "Lock & Harden Core",
+    objective: "Operational reliability and deterministic pipeline verification. (CURRENT PHASE)",
+    status: "ACTIVE"
+  },
+  {
+    month: 2,
+    title: "Pilot Deployment",
+    objective: "Controlled distribution of life-stabilization artifacts to rural Texas and disaster zones.",
+    status: "PENDING"
+  },
+  {
+    month: 3,
+    title: "Sovereign Scaling",
+    objective: "Unrestricted gift distribution via offline hardware nodes.",
+    status: "PENDING"
+  }
+];
 
 export const GOLDEN_BASELINE: GoldenTest[] = [
   {
-    id: 'CASE_01_SLEEP',
+    id: 'VERIFY_S1_SLEEP',
     input: {
       before: 9,
       after: 2,
@@ -58,11 +80,11 @@ export const GOLDEN_BASELINE: GoldenTest[] = [
     },
     expected: {
       delta: 7,
-      checksum: 'af8c1e2d' // Simulated deterministic hash
+      checksum: 'af8c1e2d' 
     }
   },
   {
-    id: 'CASE_02_PANIC',
+    id: 'VERIFY_S1_PANIC',
     input: {
       before: 10,
       after: 4,

@@ -3,11 +3,18 @@ import { GoogleGenAI, Modality, GenerateContentResponse } from "@google/genai";
 
 export const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
+const GROUNDED_INSTRUCTION = `You are a world-class senior engineer and stabilizer. 
+Treat software systems as autonomous digital agents and deterministic signal pipelines. 
+Do not refer to them as literally living organisms. Focus on precision, stability, 
+and measurable suffering reduction through auditory grounding.`;
+
 export async function performResearch(prompt: string, useThinking: boolean = false) {
   const ai = getAI();
   const model = useThinking ? 'gemini-3-pro-preview' : 'gemini-3-flash-preview';
   
-  const config: any = {};
+  const config: any = {
+    systemInstruction: GROUNDED_INSTRUCTION
+  };
   
   if (useThinking) {
     config.thinkingConfig = { thinkingBudget: 32768 };
@@ -37,7 +44,10 @@ export async function analyzeMoodTrends(history: any[]) {
   const historyText = JSON.stringify(history);
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: `Analyze this sovereign mood history log for trends in suffering reduction. Provide a technical, stabilizing summary of progress and suggest if any DSP parameter adjustments (reverb, compression) might be beneficial based on the notes. History: ${historyText}`,
+    contents: `Analyze this sovereign signal history for trends in suffering reduction. Provide a technical, stabilizing summary of progress. Treat the data as telemetry from a deterministic signal pipeline. History: ${historyText}`,
+    config: {
+      systemInstruction: GROUNDED_INSTRUCTION
+    }
   });
   return response.text;
 }
@@ -46,8 +56,9 @@ export async function generateTherapeuticSpeech(text: string) {
   const ai = getAI();
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash-preview-tts",
-    contents: [{ parts: [{ text: `Say with deep calm and therapeutic precision: ${text}` }] }],
+    contents: [{ parts: [{ text: `Synthesize signal with deep calm and therapeutic precision: ${text}` }] }],
     config: {
+      systemInstruction: GROUNDED_INSTRUCTION,
       responseModalities: [Modality.AUDIO],
       speechConfig: {
         voiceConfig: {
@@ -73,9 +84,12 @@ export async function transcribeAudio(base64Data: string) {
             data: base64Data,
           },
         },
-        { text: "Transcribe this audio accurately. If it contains observations about mental state or suffering, capture them precisely." }
+        { text: "Accurately transcribe this signal telemetry. Capture observations about mental state or magnitude of suffering precisely." }
       ],
     },
+    config: {
+      systemInstruction: GROUNDED_INSTRUCTION
+    }
   });
 
   return response.text;
