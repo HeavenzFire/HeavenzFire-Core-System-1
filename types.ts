@@ -57,6 +57,24 @@ export interface MeshBundle {
   replicationLog: Array<{ nodeID: string; received: string }>;
 }
 
+export interface NodeManifest {
+  nodeID: string;
+  version: string;
+  timestamp: number;
+  capabilities: string[];
+  activeBundles: string[]; // List of MeshBundle IDs
+  deterministicSeed: number;
+  meshChecksum: string;
+}
+
+export interface CrisisKit {
+  kitID: string;
+  targetHardware: 'RPi Zero' | 'Mobile' | 'Generic Media Player';
+  libraryVersion: string;
+  tracks: string[]; // IDs
+  totalSize: string;
+}
+
 export interface PeerNode {
   id: string;
   status: 'ONLINE' | 'OFFLINE' | 'SYNCING';
@@ -102,7 +120,22 @@ export enum AppView {
   ANALYTICS = 'ANALYTICS',
   HARNESS = 'HARNESS',
   INTELLIGENCE = 'INTELLIGENCE',
-  REPLICATION = 'REPLICATION'
+  REPLICATION = 'REPLICATION',
+  SECURITY = 'SECURITY'
+}
+
+export interface ChaosScenario {
+  id: string;
+  name: string;
+  description: string;
+  impact: string;
+  active: boolean;
+}
+
+export interface Invariant {
+  id: string;
+  label: string;
+  status: 'LOCKED' | 'BREACHED' | 'PENDING';
 }
 
 export interface GoldenTest {

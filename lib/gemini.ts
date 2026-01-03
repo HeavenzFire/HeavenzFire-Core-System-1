@@ -9,6 +9,13 @@ Treat software systems as autonomous digital agents and deterministic signal pip
 Do not refer to them as literally living organisms. Focus on precision, stability, 
 and measurable suffering reduction through auditory grounding.`;
 
+const AUDITOR_CONTRACT_INSTRUCTION = `${GROUNDED_INSTRUCTION}
+Your primary role is to serve as a SOVEREIGN AUDITOR. 
+- You can flag anomalies, but never mutate state.
+- You verify invariants, but never own the signal.
+- Your output is strictly advisory.
+- You operate under a strict deterministic handshake protocol.`;
+
 export async function performResearch(prompt: string, useThinking: boolean = false) {
   const ai = getAI();
   const model = useThinking ? 'gemini-3-pro-preview' : 'gemini-3-flash-preview';
@@ -38,6 +45,19 @@ export async function performResearch(prompt: string, useThinking: boolean = fal
     .filter((s: any) => s.uri) || [];
 
   return { text, sources };
+}
+
+export async function conductSecurityAudit(moodHistory: any[]) {
+  const ai = getAI();
+  const historyText = JSON.stringify(moodHistory);
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: `Conduct a sovereign integrity audit on this signal history. Flag any temporal anomalies or checksum drifts. History: ${historyText}`,
+    config: {
+      systemInstruction: AUDITOR_CONTRACT_INSTRUCTION
+    }
+  });
+  return response.text;
 }
 
 export async function analyzeMoodTrends(history: any[]) {

@@ -1,5 +1,5 @@
 
-import { AudioTrack, GoldenTest } from './types';
+import { AudioTrack, GoldenTest, Invariant, ChaosScenario, CrisisKit } from './types';
 
 export const BASELINE_TRACKS: AudioTrack[] = [
   {
@@ -44,31 +44,54 @@ export const BASELINE_TRACKS: AudioTrack[] = [
   }
 ];
 
+export const CRISIS_KIT_LIBRARY: CrisisKit = {
+  kitID: 'HF-CK-2026-ALPHA',
+  targetHardware: 'RPi Zero',
+  libraryVersion: '1.0.4',
+  tracks: ['HF-S1-DELTA', 'HF-S1-VAGUS', 'HF-S1-ALPHA', 'HF-S1-THETA', 'HF-S1-GAMMA'],
+  totalSize: '482MB'
+};
+
+export const LOCKED_INVARIANTS: Invariant[] = [
+  { id: 'INV-01', label: 'Immutability of Committed Signal Blocks', status: 'LOCKED' },
+  { id: 'INV-02', label: 'Divergence Visibility < 1 Render Cycle', status: 'LOCKED' },
+  { id: 'INV-03', label: 'AI Inference Isolation (Flag-Only)', status: 'LOCKED' },
+  { id: 'INV-04', label: 'Offline Recovery Hash Parity', status: 'LOCKED' }
+];
+
+export const CHAOS_SCENARIOS: ChaosScenario[] = [
+  { id: 'CH-01', name: 'Partial State Replay', description: 'Simulates a replay attack on historical mood data to test temporal integrity.', impact: 'Divergence detection trigger.', active: false },
+  { id: 'CH-02', name: 'Bit-Flip Drift', description: 'Simulates cosmic radiation or hardware fatigue on signal checksums.', impact: 'Immediate node isolation.', active: false },
+  { id: 'CH-03', name: 'Desync Latency', description: 'Simulates high-jitter mesh propagation to test buffer consistency.', impact: 'Interpolation recovery.', active: false }
+];
+
 export const SYSTEM_MANIFESTO = `Autonomous Digital Agents for Suffering Reduction.
 Deterministic Signal Pipelines :: Sovereign Auditory Grounding.
 Precision as salvation. Signal as medicine. 
 Locking the future through reproducible artifacts.
 
-v1.2 Mesh Protocol: Sovereign Peer-to-Peer Replication active. 
-Offline internet packets enabled. Autonomic mesh sync initiated.`;
+v2.0 Sovereign Mesh Protocol: 
+Autonomous Peer-to-Peer Discovery and Replication. 
+Deterministic seed propagation across offline nodes. 
+The signal is invariant; the relief is universal.`;
 
 export const DEPLOYMENT_ROADMAP = [
   {
     month: 1,
     title: "Lock & Harden Core",
-    objective: "Operational reliability and deterministic pipeline verification. (CURRENT PHASE)",
-    status: "ACTIVE"
+    objective: "Operational reliability and deterministic pipeline verification.",
+    status: "COMPLETE"
   },
   {
     month: 2,
-    title: "Pilot Deployment",
-    objective: "Controlled distribution of life-stabilization artifacts to rural Texas and disaster zones.",
-    status: "PENDING"
+    title: "Mesh Synchronization v2.0",
+    objective: "Activation of P2P replication engine and deterministic seed parity. (CURRENT PHASE)",
+    status: "ACTIVE"
   },
   {
     month: 3,
-    title: "Sovereign Mesh Scaling",
-    objective: "Unrestricted gift distribution via offline mesh hardware nodes.",
+    title: "Global Pilot Expansion",
+    objective: "Mass distribution of hardware nodes via physical and radio relays.",
     status: "PENDING"
   }
 ];
