@@ -1,0 +1,7 @@
+{
+  "name": "HeavenzFire Core: System 1",
+  "description": "A sovereign, deterministic therapeutic audio pipeline and mood tracker designed to reduce suffering through precise auditory intervention.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
